@@ -79,11 +79,8 @@ async function deploy() {
     web3.eth.accounts.wallet.add(sender.privateKey);
     const textEncoder = new TextEncoder()
     let properties = [
-        { key: 'method', value: textEncoder.encode(argv.method || '0xd09de08a') },
         { key: 'interval', value: getInt16Bytes(argv.interval || 30) },
         { key: 'limit', value: getInt16Bytes(argv.limit) },
-        // { key: 'limitBy', value: ([argv.limitBy]) }
-        { key: 'limitBy', value: getInt16Bytes(0x1) }
     ]
     console.log(properties)
 
@@ -132,7 +129,7 @@ async function deploy() {
         });
     let aspectID = ret.aspectAddress;
     console.log("ret: ", ret);
-    console.log("== deploy aspectID ==", aspectID)
+    console.log("== deployed aspectID ==", aspectID)
 }
 
 deploy().then();

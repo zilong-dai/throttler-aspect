@@ -14,6 +14,7 @@
     "operation:send": "node scripts/operation.cjs --isCall false",
     "bound:aspect": "node scripts/get-bound-aspect.cjs",
     "bound:account": "node scripts/get-bound-account.cjs",
+    "test": "node scripts/batch-test.cjs",
     "contract:bind": "node scripts/bind.cjs",
     "contract:unbind": "node scripts/unbind.cjs",
     "contract:deploy": "node scripts/contract-deploy.cjs --name Counter",

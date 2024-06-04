@@ -21,6 +21,9 @@ var argv = require('yargs')
     .default('method', 'increment')
     .argv;
 
+function sleep(delay) {
+    return new Promise(resolve => setTimeout(resolve, delay));
+}
 
 async function send() {
     // init connection to Artela node
@@ -95,10 +98,14 @@ async function send() {
         }
         let signedTx = await web3.eth.accounts.signTransaction(tx, sender.privateKey);
         console.log('call contract tx hash: ' + signedTx.transactionHash);
-        promises.push(web3.eth.sendSignedTransaction(signedTx.rawTransaction)
-            .on('receipt', receipt => {
-                console.log(receipt);
-            }))
+        try {
+            const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+            console.log(receipt)
+        } catch (e) {
+            console.log(`transaction throttled, let's wait for 10 seconds: ${e.message}`);
+            // sleep if transaction reverted
+            await sleep(10);
+        }
     }
     return Promise.all(promises)
 }
