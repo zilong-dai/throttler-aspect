@@ -1,65 +1,38 @@
-# Throttle Aspect
+# 限流器 Aspect（简化版）
 
-## Use Case Summary
+这是 [ShiningRay](https://github.com/ShiningRay/) 提供的限流器 Aspect 的简化版，用于限制某些智能合约的请求速率。
 
-**Throttle Aspect** enables contracts to limit the frequency of invokation.
+**典型场景**：
+- 在空投中，限制每个地址的领取频率。
+- 对于有影响力的项目，保护其免受 DDoS 攻击。
 
-**Typical Senario**:
-- In airdrop, limit the per address claim frequency.
-- For hot projects, protect from DDoS.
-
-## Team Members and Roles
-Team Member
-
-1: [ShiningRay](https://github.com/ShiningRay/) - Core Dev
-
-## Problem Addressed
+## 解决的问题
 
 在很多场景中， 我们不希望某些特定的接口、方法被频繁调用， 因此提出了限流的概念。 例如， 在网页前端使用键入同时触发搜索的功能， 为了防止用户频繁触发搜索， 我们可以设置一个时间间隔， 在这个时间间隔内， 用户只能触发一次搜索。
 同样在区块链中， 也有类似的场景： 例如， 在空投中， 我们不希望用户频繁领取空投， 因此， 我们可以设置一个时间间隔在这个时间间隔内， 用户只能领取一次空投。
 
-## Project Design
+## 项目设计
 
-### Implementation
+### 实现
 
-通过 Aspect的 `mutableState` 储存方法的调用信息， 并在 `PreContractCall` 切面中检查方法调用的频率， 如果超过限制， 则打断交易。
-目前尚未实现 `FilterTx` 切面， 若实现可以实现在进入内存池之前就拒绝超限的交易， 以减轻网络压力， 防止 DDoS
+通过 Aspect 的 `mutableState` 储存方法的调用信息，并在 `PreContractCall` 切点中检查方法调用的频率。如果超过限制，交易将被中止。
 
-## Value to the Artela Ecosystem
-
-通过限流功能， 可以防止 DDoS 攻击， 保护网络安全。
-对于空投等场景， 可以限制用户频繁领取空投， 保护项目方的利益。
-
-## 与纯EVM实现的对比
+### 与纯 EVM 实现的对比
 
 EVM生态中可以在合约中实现限流功能， 但如果合约尚未考虑限流逻辑的话， 升级合约相对麻烦， 通过 Aspect 可以在不修改合约的情况下， 为合约增加限流功能。
 
-## TODO & Future Plans
+## 运行方式
 
-1. 由于目前 Artela 的 FilterTx 切面尚未实装。 若能实现FilterTx切面， 则可以在交易进入 Mempool 之前就拒绝超限的交易， 以减轻网络压力， 防止 DDoS
-2. 本 Aspect 演示在部署时便已经通过`property`指定了方法签名和相关限流配置, 但是在实际应用中， 我们希望：
-  1. 本 Aspect 可以作为公共组件， 为不同的合约提供能力
-  2. 链上运行时动态修改限流配置
-  以上可以通过 `operation` 接口进行实现
-3. 增加对时间为单位的限流的支持
-4. 支持对于不同的方法进行不同的限流配置
-5. 支持对于不同的地址进行不同的限流配置
-
-## How to Use
-
-先创建地址
+### 创建地址
 
 ```bash
 $ npm run account:create
 address:  0x6B70B03B608a19Bf1817848A4C8FFF844f0Be0fB
 ```
 
-然后脚本会在项目目录中创建私钥文件 `privateKey.txt`, 也可以填入自己的私钥。
-记录下自己的地址， 接着可以去 Artela 的 Discord 水龙头中申请测试币。
+脚本将在项目目录中创建一个名为 `privateKey.txt` 的私钥文件。您也可以输入自己的私钥。记录下您的地址，然后您可以去 Artela 的 Discord 水龙头中申请测试币。
 
-## 编译和部署合约
-
-如果对已有合约绑定Aspect， 可以跳过此步
+### 编译和部署合约
 
 ```bash
 $ npm run contract:build
@@ -90,10 +63,9 @@ deploy contract tx hash: 0x55d445796c0bc4435e827e88ee35104205369c685d9f06bbfc42d
 }
 contract address:  0x9CEAE67580eB1d82B9CeEe53e57f137f66D87d83
 --contractAccount 0x6B70B03B608a19Bf1817848A4C8FFF844f0Be0fB --contractAddress 0x9CEAE67580eB1d82B9CeEe53e57f137f66D87d83
-
 ```
 
-记住最后部署的合约地址， 以便后续绑定。
+记住最后部署的合约地址，以便后续绑定。
 
 ### 编译 Aspect
 
@@ -101,10 +73,10 @@ contract address:  0x9CEAE67580eB1d82B9CeEe53e57f137f66D87d83
 $ npm run aspect:build
 ```
 
-构建好之后， 运行部署脚本
+构建好之后，运行部署脚本。
 
 ```bash
-$ node scripts/aspect-deploy.cjs --method 0xd09de08a --interval 30 --limit 1
+$ node scripts/aspect-deploy.cjs --interval 5 --limit 2
 
 from address:  0x6B70B03B608a19Bf1817848A4C8FFF844f0Be0fB
 sending signed transaction...
@@ -143,21 +115,19 @@ ret:  {
 == deploy aspectID == 0x9AE212EFbc8935D95DD266947cDb231571c1A09e
 ```
 
-其中参数为：
+参数为：
 
-- method 方法签名
-- interval 限流区块数量间隔
-- limit 每个间隔最多能执行的次数
+- interval：限流区块数量间隔
+- limit：每个间隔最多能执行的次数
 
-记住最后的 aspectID， 以便后续绑定。
+记住最后的 aspectID，以便后续绑定。
 
+### 绑定
 
-# 绑定
-
-执行`bind。cjs`脚本， 并代入之前部署的合约地址 （或者自己的合约地址） 和AspectID
+执行 `bind.cjs` 脚本，并代入之前部署的合约地址（或者自己的合约地址）和 aspectID。
 
 ```bash
-$ node scripts/bind.cjs --contract <CONTRAT_ADDRESS> --aspectId <ASPECT_ID>
+$ node scripts/bind.cjs --contract <CONTRACT_ADDRESS> --aspectId <ASPECT_ID>
 
 sending signed transaction...
 {
@@ -178,18 +148,18 @@ sending signed transaction...
 == aspect bind success ==
 ```
 
-然后我们可以执行查询合约绑定的Aspect的脚本， 检查合约是否绑定成功
+然后我们可以执行查询合约绑定的 Aspect 的脚本，检查合约是否绑定成功。
 
 ```bash
-$ node scripts/query.cjs --contract <CONTRAT_ADDRESS>
+$ node scripts/query.cjs --contract <CONTRACT_ADDRESS>
 bound aspects : 0x9AE212EFbc8935D95DD266947cDb231571c1A09e,1,1
 ```
 
-输出中显示了上述的AspectID， 表示已经成功绑定
+输出中显示了上述的 aspectID，表示已经成功绑定。
 
-## 测试
+### 测试
 
-`scripts/batch-test.cjs` 会同时批量发送合约交易， 用以测试限流功能
+`scripts/batch-test.cjs` 会批量发送合约交易，用以测试限流功能。
 
 ```bash
 $ node scripts/batch-test.cjs
@@ -254,7 +224,9 @@ Error: Transaction has been reverted by the EVM:
     from: '0x6b70b03b608a19bf1817848a4c8fff844f0be0fb',
     gasUsed: 4000001,
     logs: [],
-    logsBloom: '0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+    logsBloom: '0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
     status: false,
     to: '0x9ceae67580eb1d82b9ceee53e57f137f66d87d83',
     transactionHash: '0x9d1c26f29a63f0b074a9743c0383a2e5d12eb3cd048627aa6cde98d9da6ad6be',
@@ -264,6 +236,4 @@ Error: Transaction has been reverted by the EVM:
 }
 ```
 
-脚本返回报错， 表示限流器成功阻止了交易的成功
-
-
+脚本返回报错，表示限流器成功阻止了交易的成功。

@@ -1,75 +1,39 @@
-# Throttle Aspect
+# Throttler Aspect (Simplified Version)
 
-## Use Case Summary
+Simplified version of Throttler Aspect from [ShiningRay](https://github.com/ShiningRay/), this Aspect is used for limiting the request rate of certain smart contract.
 
-**Throttle Aspect** enables contracts to limit the frequency of invokation.
-
-**Typical Senario**:
+**Typical Scenario**:
 - In airdrop, limit the per address claim frequency.
-- For hot projects, protect from DDoS.
-
-## Team Members and Roles
-Team Member
-
-1: [ShiningRay](https://github.com/ShiningRay/) - Core Dev
+- For influential projects, protect from DDoS.
 
 ## Problem Addressed
 
-In many scenarios, we do not want certain specific interfaces or methods to be frequently called, hence the concept of rate limiting is introduced. For example, in a web front-end, using a feature that triggers a search upon typing, to prevent users from frequently triggering the search, we can set a time interval. Within this interval, the user is only able to trigger the search once.
+In many scenarios, we want to prevent certain interfaces or methods from being called too frequently, which brings about the concept of rate limiting. For instance, in a web front-end where typing triggers a search function, we can set a time interval to prevent users from triggering the search too frequently. During this interval, the user can only trigger the search once.
 
-Similarly, in blockchain contexts, there are comparable scenarios. For instance, in airdrops, we don't want users to frequently claim the airdrops. Therefore, we can set a time interval, during which a user can only claim the airdrop once.
+Similarly, in blockchain, there are comparable scenarios. For example, during an airdrop, we don't want users to claim the airdrop too frequently. Therefore, we can set a time interval during which users can only claim the airdrop once.
 
 ## Project Design
 
 ### Implementation
 
-By using Aspect's `mutableState` to store method call information, and checking the frequency of method calls in the `PreContractCall` aspect, if the frequency exceeds the limit, the transaction will be interrupted.
+By using the `mutableState` of Aspect to store information about method calls, we can check the frequency of method calls in the `PreContractCall` aspect. If the frequency exceeds the limit, the transaction is reverted.
 
-Currently, the `FilterTx` aspect has not been implemented. If implemented, it would be possible to reject transactions that exceed the limit before they enter the memory pool. This would help reduce network stress and prevent DDoS attacks.
+### Comparison with Pure EVM Implementation
 
-## Value to the Artela Ecosystem
+In the EVM ecosystem, rate limiting can be implemented within the contract. However, if the contract does not already include rate limiting logic, upgrading the contract can be relatively cumbersome. With Aspect, rate limiting functionality can be added to the contract without modifying the contract itself.
 
-The rate limiting feature can prevent DDoS attacks and protect network security. In scenarios such as airdrops, it can limit users from frequently claiming airdrops, thus protecting the interests of the project initiators.
+## How to Run
 
-## Compare to EVM Contract implementations
-
-In the EVM (Ethereum Virtual Machine) ecosystem, rate limiting functionality can be implemented within contracts. However, if a contract has not initially considered rate limiting logic, upgrading the contract to include such functionality can be relatively cumbersome. By using Aspect, rate limiting features can be added to contracts without the need to modify the contract itself.
-
-
-
-## TODO & Future Plans
-
-1. Due to the current unimplemented state of Artela's `FilterTx` join point, if this could be implemented, it would be possible to reject transactions exceeding limits before they enter the Mempool, thereby reducing network stress and preventing DDoS attacks.
-
-2. This Aspect demonstration has already specified method signatures and related rate limiting configurations through `property` at deployment. However, in practical applications, we hope:
-   1. This Aspect can act as a common component, providing capabilities to different contracts.
-   2. The rate limiting configurations can be dynamically modified during runtime on the blockchain.
-   These objectives can be achieved through the `operation` interface.
-3. Add support for rate limiting based on time units.
-4. Support different rate limiting configurations for different methods.
-5. Support different rate limiting configurations for different addresses.
-
-
-## How to Use
-
-Clone the repository from https://github.com/ShiningRay/artela-throttle-aspect
-
-```bash
-$ git clone https://github.com/ShiningRay/artela-throttle-aspect
-```
-
-First create an EoA
+Create an address
 
 ```bash
 $ npm run account:create
 address:  0x6B70B03B608a19Bf1817848A4C8FFF844f0Be0fB
 ```
 
-Then, the script will create a private key file `privateKey.txt` in the project directory. You can also input your own private key. Record your address, and then you can apply for test coins in Artela's Discord faucet.
+The script will then create a private key file named `privateKey.txt` in the project directory. You can also input your own private key if you prefer. Note down your address, and then you can request test tokens from the Artela Discord faucet.
 
-## Compile and deploy Contract
-
-If you are binding the Aspect to an existing contract, you can skip this step.
+### Compile and Deploy Contracts
 
 ```bash
 $ npm run contract:build
@@ -103,7 +67,7 @@ contract address:  0x9CEAE67580eB1d82B9CeEe53e57f137f66D87d83
 
 ```
 
-Remember the address of the last deployed contract for subsequent binding purposes.
+Remember the address of the deployed contract, as it will be needed for binding later.
 
 ### Compile Aspect
 
@@ -111,10 +75,10 @@ Remember the address of the last deployed contract for subsequent binding purpos
 $ npm run aspect:build
 ```
 
-After the build is complete, run the deployment script.
+After building, run the deployment script.
 
 ```bash
-$ node scripts/aspect-deploy.cjs --method 0xd09de08a --interval 30 --limit 1
+$ node scripts/aspect-deploy.cjs --interval 5 --limit 2
 
 from address:  0x6B70B03B608a19Bf1817848A4C8FFF844f0Be0fB
 sending signed transaction...
@@ -153,18 +117,17 @@ ret:  {
 == deploy aspectID == 0x9AE212EFbc8935D95DD266947cDb231571c1A09e
 ```
 
-The parameters for the deployment script are:
+The parameters are as follows:
 
-- `method`: The method signature.
-- `interval`: The number of blocks in the rate limiting interval.
-- `limit`: The maximum number of times the method can be executed in each interval.
+- interval: The number of seconds for the rate limiting
+- limit: The maximum number of times the method can be executed within the interval
 
-Remember the final `aspectID` for subsequent binding.
+Remember the final aspectID for future binding.
 
 
-# Binding Aspect
+### Binding
 
-Run the `bind.cjs` script, and input the previously deployed contract address (or your own contract address) along with the AspectID.
+Run the `bind.cjs` script and input the previously deployed contract address (or your own contract address) and the aspect id.
 
 ```bash
 $ node scripts/bind.cjs --contract <CONTRAT_ADDRESS> --aspectId <ASPECT_ID>
@@ -188,18 +151,18 @@ sending signed transaction...
 == aspect bind success ==
 ```
 
-Then, you can execute the script to query the Aspect bound to the contract to check whether the contract has been successfully bound.
+Then, we can execute the script to query the Aspect bound to the contract and check if the binding was successful.
 
 ```bash
-$ node scripts/get-bound-aspect.cjs --contract <CONTRAT_ADDRESS>
+$ node scripts/query.cjs --contract <CONTRAT_ADDRESS>
 bound aspects : 0x9AE212EFbc8935D95DD266947cDb231571c1A09e,1,1
 ```
 
-If the output displays the aforementioned AspectID, it indicates that the binding has been successful.
+If the output displays the aforementioned `aspectID`, it indicates that the binding was successful.
 
-## Testing
+### Testing
 
-The `scripts/batch-test.cjs` script will send contract transactions in batch simultaneously, which is used to test the rate limiting functionality.
+`scripts/batch-test.cjs` will batch send contract transactions to test the rate limiting functionality.
 
 ```bash
 $ node scripts/batch-test.cjs
@@ -274,6 +237,6 @@ Error: Transaction has been reverted by the EVM:
 }
 ```
 
-If the script returns an error, it indicates that the rate limiter has successfully prevented the transaction from succeeding.
+If the script returns an error, it indicates that the rate limiter has successfully prevented the transaction from going through.
 
 
